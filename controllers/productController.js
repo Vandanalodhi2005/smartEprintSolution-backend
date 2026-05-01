@@ -127,7 +127,17 @@ const getProducts = asyncHandler(async (req, res) => {
 });
 
 const getProductById = asyncHandler(async (req, res) => {
-    const product = await Product.findById(req.params.id).populate('category', 'name');
+    const { id } = req.params;
+    let product;
+
+    // Check if ID is a valid MongoDB ObjectId
+    if (mongoose.Types.ObjectId.isValid(id)) {
+        product = await Product.findById(id).populate('category', 'name');
+    } else {
+        // If not a valid ID, search by slug
+        product = await Product.findOne({ slug: id }).populate('category', 'name');
+    }
+
     if (product) {
         res.json(product);
     } else {
@@ -163,7 +173,7 @@ const createProduct = asyncHandler(async (req, res) => {
         name, title, brand, category, price, oldPrice, countInStock, description,
         shortDetails, shortSpecification, overview, technicalSpecification,
         color, width, height, depth, screenSize, reviews,
-        technology, usageCategory, allInOneType, wireless, mainFunction
+        technology, usageCategory, allInOneType, wireless, mainFunction, keywords
     } = req.body;
 
     const finalTitle = name || title;
@@ -203,7 +213,8 @@ const createProduct = asyncHandler(async (req, res) => {
         usageCategory: parseArrayField(usageCategory),
         allInOneType: parseArrayField(allInOneType),
         wireless,
-        mainFunction: parseArrayField(mainFunction)
+        mainFunction: parseArrayField(mainFunction),
+        keywords: keywords || ''
     });
 
     const createdProduct = await product.save();

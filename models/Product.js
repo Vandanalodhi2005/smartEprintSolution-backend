@@ -52,6 +52,7 @@ const productSchema = mongoose.Schema({
         type: [String],
         enum: ['Print', 'Scan', 'Copy', 'Fax', 'Print Only'],
     },
+    keywords: { type: String },
 }, {
     timestamps: true
 });

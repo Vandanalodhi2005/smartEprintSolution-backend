@@ -1,46 +1,65 @@
+/**
+ * Smart ePrint Solution - Backend Server
+ * Main entry point for the API and Socket services.
+ */
+
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./config/db');
-const { errorHandler, notFound } = require('./middleware/errorMiddleware');
 const http = require('http');
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
 
+// Internal Modules
+const connectDB = require('./config/db');
+const { errorHandler, notFound } = require('./middleware/errorMiddleware');
+
+// Load Environment Variables
 dotenv.config();
+
+// Connect to Database
 connectDB();
 
 const app = express();
-
-
-// Middleware
 const server = http.createServer(app);
+
+/**
+ * Socket.io Configuration
+ * Configures real-time communication for support chat and live updates.
+ */
 const io = new Server(server, {
     cors: {
         origin: [
             "https://smarteprintfrontend.vercel.app",
-            "https://smarteprintfrontend.vercel.app",
             "https://smarteprint.com",
             "https://smarteprint.com/",
             "http://localhost:5173",
-            "http://localhost:5173/"
-            // "https://printers-test-websites.netlify.app/",
-            // "https://printsbasket.com/",
+            "http://localhost:5173/",
+            "http://127.0.0.1:5173",
+            "http://127.0.0.1:5173/"
         ],
         methods: ["GET", "POST"],
         credentials: true
     }
 });
 
-
-app.use(cors())
+/**
+ * Middleware Configuration
+ */
+app.use(cors({
+    origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://smarteprintfrontend.vercel.app", "https://smarteprint.com"],
+    credentials: true
+}));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
 
-// Routes
+/**
+ * API Routes
+ */
 app.get('/', (req, res) => {
-    res.send('Hello from backend!');
+    res.json({ status: 'success', message: 'Smart ePrint API is running smoothly.' });
 });
+
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
 app.use('/api/categories', require('./routes/categoryRoutes'));
@@ -51,7 +70,9 @@ app.use('/api/chats', require('./routes/chatRoutes'));
 app.use('/api/cart', require('./routes/cartRoutes'));
 app.use('/api/admin', require('./routes/setupRoutes'));
 
-// Socket.io Authentication Middleware
+/**
+ * Socket.io Middleware & Event Handlers
+ */
 io.use((socket, next) => {
     const token = socket.handshake.auth.token;
     if (token) {
@@ -60,30 +81,22 @@ io.use((socket, next) => {
             socket.userId = decoded.id;
             next();
         } catch (error) {
-            next(new Error('Authentication error'));
+            next(new Error('Authentication failed: Invalid token'));
         }
     } else {
-        next(new Error('Authentication error'));
+        next(new Error('Authentication failed: No token provided'));
     }
 });
 
-// Socket.io Connection Handler
 io.on('connection', (socket) => {
-    // console.log('User connected:', socket.userId);
-
-    // Join user's personal room
     socket.join(`user-${socket.userId}`);
 
-    // Join chat room
     socket.on('join-chat', (chatId) => {
         socket.join(`chat-${chatId}`);
-        // console.log(`User ${socket.userId} joined chat ${chatId}`);
     });
 
-    // Send message event
     socket.on('send-message', (data) => {
         const { chatId, message, sender } = data;
-        // Broadcast to all users in the chat room
         io.to(`chat-${chatId}`).emit('new-message', {
             chatId,
             message,
@@ -92,7 +105,6 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Typing indicator
     socket.on('typing', (data) => {
         const { chatId, isTyping, userName } = data;
         socket.to(`chat-${chatId}`).emit('user-typing', {
@@ -102,18 +114,24 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Disconnect
     socket.on('disconnect', () => {
-        console.log('User disconnected:', socket.userId);
+        // User disconnected
     });
 });
 
-// Error Handler
+/**
+ * Error Handling Middleware
+ */
 app.use(notFound);
 app.use(errorHandler);
 
+/**
+ * Start Server
+ */
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+server.listen(PORT, () => {
+    console.log(`\n🚀 Server is live at http://127.0.0.1:${PORT}`);
+    console.log(`📂 Environment: ${process.env.NODE_ENV || 'development'}\n`);
+});
 
-// Export io for use in other files if needed
 module.exports = { io };
