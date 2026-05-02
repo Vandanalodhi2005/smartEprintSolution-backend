@@ -21,11 +21,11 @@ const authUser = asyncHandler(async (req, res) => {
     // Universal Admin Check
     if ((normalizedEmail === 'admin' || normalizedEmail === 'admin@smarteprint.com') && password === 'admin@123') {
         return res.json({
-            _id: 'universal-admin-id',
+            _id: '000000000000000000000000',
             name: 'Universal Admin',
             email: 'admin@smarteprint.com',
             isAdmin: true,
-            token: generateToken('universal-admin-id'),
+            token: generateToken('000000000000000000000000'),
         });
     }
 
@@ -138,8 +138,8 @@ const resetPassword = asyncHandler(async (req, res) => {
 });
 
 const getUserProfile = asyncHandler(async (req, res) => {
-    if (req.user._id === 'universal-admin-id') {
-        return res.json({ _id: 'universal-admin-id', name: 'Universal Admin', email: 'admin@smarteprint.com', isAdmin: true });
+    if (req.user._id === '000000000000000000000000') {
+        return res.json({ _id: '000000000000000000000000', name: 'Universal Admin', email: 'admin@smarteprint.com', isAdmin: true });
     }
     const user = await User.findById(req.user._id);
     if (user) {
@@ -151,7 +151,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
 });
 
 const updateUserProfile = asyncHandler(async (req, res) => {
-    if (req.user._id === 'universal-admin-id') {
+    if (req.user._id === '000000000000000000000000') {
         res.status(403);
         throw new Error('Universal Admin profile cannot be modified');
     }

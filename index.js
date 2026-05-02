@@ -1,5 +1,5 @@
 /**
- * Smart ePrint Solution - Backend Server
+ * Smart ePrint Solution - Backend Server (Restart Triggered)
  * Main entry point for the API and Socket services.
  */
 
@@ -31,6 +31,8 @@ const io = new Server(server, {
     cors: {
         origin: [
             "https://smarteprintfrontend.vercel.app",
+            "https://smart-eprint-solution.vercel.app",
+            "https://smart-eprint-solution.vercel.app/",
             "https://smarteprint.com",
             "https://smarteprint.com/",
             "http://localhost:5173",
@@ -47,7 +49,15 @@ const io = new Server(server, {
  * Middleware Configuration
  */
 app.use(cors({
-    origin: ["http://localhost:5173", "http://127.0.0.1:5173", "https://smarteprintfrontend.vercel.app", "https://smarteprint.com"],
+    origin: [
+        "http://localhost:5173", 
+        "http://127.0.0.1:5173", 
+        "https://smarteprintfrontend.vercel.app", 
+        "https://smart-eprint-solution.vercel.app",
+        "https://smart-eprint-solution.vercel.app/",
+        "https://smarteprint.com",
+        "https://smarteprint.com/"
+    ],
     credentials: true
 }));
 app.use(express.json());

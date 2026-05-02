@@ -223,15 +223,54 @@ const createProduct = asyncHandler(async (req, res) => {
 
 const updateProduct = asyncHandler(async (req, res) => {
     const product = await Product.findById(req.params.id);
+
     if (product) {
-        const { title, brand, category, price, oldPrice, countInStock, description } = req.body;
-        product.title = title || product.title;
+        const {
+            name, title, brand, category, price, oldPrice, countInStock, description,
+            shortDetails, shortSpecification, overview, technicalSpecification,
+            color, width, height, depth, screenSize,
+            technology, usageCategory, allInOneType, wireless, mainFunction, keywords
+        } = req.body;
+
+        const parseArrayField = (field) => {
+            if (!field) return undefined;
+            if (Array.isArray(field)) return field;
+            if (typeof field === 'string') {
+                try { return JSON.parse(field); } catch { return field.split(',').map(v => v.trim()).filter(Boolean); }
+            }
+            return [];
+        };
+
+        product.title = name || title || product.title;
         product.brand = brand || product.brand;
         product.category = category || product.category;
-        product.price = price || product.price;
-        product.oldPrice = oldPrice ?? product.oldPrice;
-        product.countInStock = countInStock ?? product.countInStock;
+        product.price = price !== undefined ? Number(price) : product.price;
+        product.oldPrice = oldPrice !== undefined ? Number(oldPrice) : product.oldPrice;
+        product.countInStock = countInStock !== undefined ? Number(countInStock) : product.countInStock;
         product.description = description || product.description;
+        product.shortDetails = shortDetails || product.shortDetails;
+        product.shortSpecification = shortSpecification || product.shortSpecification;
+        product.overview = overview || product.overview;
+        product.technicalSpecification = technicalSpecification || product.technicalSpecification;
+        product.color = color || product.color;
+        product.width = width || product.width;
+        product.height = height || product.height;
+        product.depth = depth || product.depth;
+        product.screenSize = screenSize || product.screenSize;
+        product.keywords = keywords || product.keywords;
+        product.wireless = wireless || product.wireless;
+
+        const techArr = parseArrayField(technology);
+        if (techArr) product.technology = techArr;
+
+        const usageArr = parseArrayField(usageCategory);
+        if (usageArr) product.usageCategory = usageArr;
+
+        const typeArr = parseArrayField(allInOneType);
+        if (typeArr) product.allInOneType = typeArr;
+
+        const funcArr = parseArrayField(mainFunction);
+        if (funcArr) product.mainFunction = funcArr;
 
         if (req.files && req.files.length > 0) {
             const uploadPromises = req.files.map(file =>
@@ -239,6 +278,16 @@ const updateProduct = asyncHandler(async (req, res) => {
             );
             const newImageUrls = await Promise.all(uploadPromises);
             product.images = [...product.images, ...newImageUrls];
+        } else if (req.body.images) {
+            // Handle images sent as JSON (from existing images array)
+            try {
+                const imgArr = typeof req.body.images === 'string' ? JSON.parse(req.body.images) : req.body.images;
+                if (Array.isArray(imgArr)) {
+                    product.images = imgArr;
+                }
+            } catch (e) {
+                console.error("Error parsing images:", e);
+            }
         }
 
         const updatedProduct = await product.save();

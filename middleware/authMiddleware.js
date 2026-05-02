@@ -14,8 +14,8 @@ const protect = asyncHandler(async (req, res, next) => {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             
             // Universal Admin Bypass
-            if (decoded.id === 'universal-admin-id') {
-                req.user = { _id: 'universal-admin-id', name: 'Universal Admin', isAdmin: true };
+            if (decoded.id === '000000000000000000000000') {
+                req.user = { _id: '000000000000000000000000', name: 'Universal Admin', isAdmin: true };
                 return next();
             }
 
