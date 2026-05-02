@@ -31,8 +31,6 @@ const allowedOrigins = [
     "http://localhost:5173", 
     "http://127.0.0.1:5173", 
     "https://smarteprintfrontend.vercel.app", 
-    "https://smart-eprint-solution-frontend-dev.vercel.app",
-    "https://smart-eprint-solution-backend-dev.vercel.app",
     "https://smart-eprint-solution.vercel.app",
     "https://smarteprint.com"
 ];
@@ -40,16 +38,14 @@ const allowedOrigins = [
 const corsOptions = {
     origin: function (origin, callback) {
         if (!origin) return callback(null, true);
+        
+        const isVercelPreview = origin.match(/^https:\/\/smart-eprint-solution-frontend-.*\.vercel\.app$/);
+        const isAllowedStatic = allowedOrigins.indexOf(origin) !== -1;
+        const isRootDomain = origin === "https://smarteprint.com" || origin === "https://smarteprint.com/";
 
-        const isVercelPreview      = origin.match(/^https:\/\/smart-eprint-solution-frontend-.*\.vercel\.app$/);
-        const isVercelBackendPreview = origin.match(/^https:\/\/smart-eprint-solution-backend-.*\.vercel\.app$/);
-        const isAllowedStatic        = allowedOrigins.indexOf(origin) !== -1;
-        const isRootDomain           = origin === "https://smarteprint.com" || origin === "https://smarteprint.com/";
-
-        if (isAllowedStatic || isVercelPreview || isVercelBackendPreview || isRootDomain) {
+        if (isAllowedStatic || isVercelPreview || isRootDomain) {
             callback(null, true);
         } else {
-            console.log('CORS Blocked:', origin);
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -145,15 +141,9 @@ app.use(errorHandler);
  * Start Server
  */
 const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => {
+    console.log(`\n🚀 Server is live at http://127.0.0.1:${PORT}`);
+    console.log(`📂 Environment: ${process.env.NODE_ENV || 'development'}\n`);
+});
 
-// Export for Vercel Serverless
-if (process.env.VERCEL) {
-    module.exports = app;
-} else {
-    server.listen(PORT, () => {
-        console.log(`\n🚀 Server is live at http://127.0.0.1:${PORT}`);
-        console.log(`📂 Environment: ${process.env.NODE_ENV || 'development'}\n`);
-    });
-}
-
-module.exports = app;
+module.exports = { io };
