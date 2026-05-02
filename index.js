@@ -32,6 +32,7 @@ const allowedOrigins = [
     "http://127.0.0.1:5173", 
     "https://smarteprintfrontend.vercel.app", 
     "https://smart-eprint-solution.vercel.app",
+    "https://smart-eprint-solution-frontend.vercel.app",
     "https://smarteprint.com"
 ];
 
