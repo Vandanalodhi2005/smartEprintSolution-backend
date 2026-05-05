@@ -109,10 +109,24 @@ const getOrders = asyncHandler(async (req, res) => {
     res.json({ orders, page, pages: Math.ceil(count / pageSize), total: count });
 });
 
+// @desc    Check if user is eligible to review a product
+// @route   GET /api/orders/check-review-eligibility/:productId
+// @access  Private
+const checkReviewEligibility = asyncHandler(async (req, res) => {
+    const orders = await Order.find({
+        user: req.user._id,
+        isDelivered: true,
+        'orderItems.product': req.params.productId
+    });
+
+    res.json({ canReview: orders.length > 0 });
+});
+
 module.exports = {
     addOrderItems,
     getOrderById,
     updateOrderStatus,
     getMyOrders,
-    getOrders
+    getOrders,
+    checkReviewEligibility
 };
